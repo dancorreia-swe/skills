@@ -13,7 +13,7 @@ few lines in your global instructions. Paths assume a global install
 ## 1. Pick your models
 
 Copy [models.yaml](models.yaml) to `~/.config/coordinating/models.yaml` and edit the copy
-(updates overwrite the installed one): one Claude and one Codex model per tier (Light, Mid,
+(updates overwrite the installed one): one model per tier for each family you use (delete a family's blocks to stop using it) (Light, Mid,
 Heavy), each with an effort. Use ids your hosts accept (T3: `orchestrator_capabilities`;
 Orca: `orca orchestration worker-start --help`). Keep it plain block YAML; the hooks read
 it with grep. To allow another id outside the tiers, add it under `extra_allowed` as

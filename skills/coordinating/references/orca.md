@@ -6,6 +6,7 @@ Exact syntax: `orca skills get orchestration` (coordination) and the `orca-cli` 
 | Need | Orca |
 |---|---|
 | Start a worker | `orca orchestration worker-start --spec-file <file> --agent claude\|codex --model <id> --effort <level>`. `--agent` = the family that runs the model (section 2). With the guard hooks installed (SETUP.md), a claude/codex launch whose `--model` is missing or not in models.yaml, or that has no `--effort`, is denied. |
+| Model ids | Tiers: models.yaml. Active families (SKILL.md section 2): the `--agent` values and models `orca orchestration worker-start --help` offers. |
 | List existing | `orca worktree list`, `orca orchestration worker-list` |
 | Wake | Orca types "You have N orchestration message(s)…" into the terminal. Run one `orca orchestration check --run <id> --json`, then replies + `worker-release` + `check --ack <delivery_id>` in one chained call. |
 | Headless runs only | A background `orca orchestration check --wait --timeout-ms 900000`, for automations where no nudge arrives. |
