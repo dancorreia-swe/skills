@@ -19,6 +19,7 @@ allowed_models() {
 }
 
 # "light: Claude claude-haiku-5-5/high, Codex gpt-6-luna/high; mid: ..." for deny messages.
+# A family left out of the file is left out of the summary.
 tiers_summary() {
   [ -r "$MODEL_TIERS_FILE" ] || return 0
   awk '
@@ -32,8 +33,10 @@ tiers_summary() {
     END {
       for (i = 1; i <= n; i++) {
         t = order[i]
-        printf "%s%s: Claude %s/%s, Codex %s/%s", (i > 1 ? "; " : ""), t,
-          m[t, "claude"], e[t, "claude"], m[t, "codex"], e[t, "codex"]
+        s = ""
+        if ((t, "claude") in m) s = s "Claude " m[t, "claude"] "/" e[t, "claude"]
+        if ((t, "codex") in m) s = s (s != "" ? ", " : "") "Codex " m[t, "codex"] "/" e[t, "codex"]
+        printf "%s%s: %s", (i > 1 ? "; " : ""), t, s
       }
     }' "$MODEL_TIERS_FILE"
 }

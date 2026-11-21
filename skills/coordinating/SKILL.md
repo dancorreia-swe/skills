@@ -34,17 +34,23 @@ the same check failing twice, or the task proving bigger.
 | **S** | Clear task, one area, testable as written. | The agent alone, Mid; it checks its own work. |
 | **M** | Several files, or a gap in the spec. | A planning pass first, a QA pass after. |
 | **L** | Cross-cutting, new feature, schema change, new UI surface. | Planner to split it, builders for the parts, designer for UI, a reviewer per PR. |
-| **Risky** (adds to any size) | Auth, payments, migrations, data deletion, secrets, public API. | An advisor before building, a second-family reviewer after. |
+| **Risky** (adds to any size) | Auth, payments, migrations, data deletion, secrets, public API. | An advisor before building, a second-opinion reviewer after (section 2). |
 | **Unknown-cause bug** | Broken, cause unknown. | Diagnose first (`diagnosing-bugs`); build once the cause is reproduced. |
 
 ## 2. Pick model and effort
 
 Name the model and effort on every launch: an unnamed child inherits its parent's, so a
 heavy coordinator quietly spawns heavy children. The tiers live in
-[models.yaml](models.yaml), with a Claude and a Codex model for each; read it now
+[models.yaml](models.yaml), with a model per family (Claude, Codex) for each; read it now
 (`~/.config/coordinating/models.yaml` replaces it when present: the user's own picks). With the
 optional guard hooks installed ([SETUP.md](SETUP.md)), a delegate or Orca launch whose model
 is not listed there, or that names no effort, is denied.
+
+**Active families.** Use only a family that is both listed in models.yaml and active on the
+host: check once per session (host map, "Model ids"; T3 `orchestrator_capabilities`, Orca
+`worker-start --help`). A family the user left out of models.yaml, or whose provider is
+disabled or doesn't offer the tier's model, is not used: never substitute another id for a
+tier on your own, ask (section 7).
 
 | Tier | Claude | Codex | For |
 |---|---|---|---|
@@ -55,13 +61,17 @@ is not listed there, or that names no effort, is denied.
 - **Your family first.** A helper runs on your own family's model for its tier. Your native
   subagent tool reaches only your family (Claude → Claude, Codex → Codex); the other family
   goes through `delegate_task` (T3) or `worker-start --agent` (Orca).
-- **Second family** = the other family from yours (Claude coordinating → Codex; Codex
-  coordinating → Claude), at Mid, or Heavy when Risky. It catches different things. Codex is
-  also a good builder for backend or algorithmic S/M work.
-- Heavy is the ceiling. When a Heavy advisor and a second-family reviewer disagree, put both
+- **Second opinion** = the other family from yours when it is active (Claude coordinating →
+  Codex; Codex coordinating → Claude), at Mid, or Heavy when Risky. It catches different
+  things. Codex is also a good builder for backend or algorithmic S/M work.
+- **One family active**: the second opinion is a fresh helper of your own family at Heavy, in
+  its own context, briefed with the code and the plan but not your reasoning or preferred
+  answer, and told to look for what the author missed. Say in your report that the second
+  opinion was same-family.
+- Heavy is the ceiling. When a Heavy advisor and a second-opinion reviewer disagree, put both
   verdicts to the user as a decision (section 7).
-- Review rounds run on Mid (Heavy or second family when Risky). A re-review runs on Light
-  and gets only the new commits plus the earlier findings.
+- Review rounds run on Mid (Heavy or the second opinion when Risky). A re-review runs on
+  Light and gets only the new commits plus the earlier findings.
 - models.yaml wins over this table if they ever differ; ids not in it need an
   `extra_allowed` entry first.
 
@@ -77,7 +87,7 @@ thread when it needs its own worktree, a different agent family, or must outlive
 | **Strategist** | Ordering a backlog, cutting scope. Product docs, not code. | Heavy | Order and cuts; open choices as a section 7 brief. |
 | **Designer** | New or changed UI. | Mid; Heavy for a new pattern | UI spec covering empty/loading/error/success, or a throwaway prototype. |
 | **QA** | Acceptance needs checking in a running app, device or suite. | Mid; Light for re-checks | Pass/fail per criterion with evidence paths. |
-| **Advisor** | A Risky or ADR-level choice, or a builder stuck twice. Brief it without your preferred answer. | Heavy or second family | The pick, why, and the risk that would change it. |
+| **Advisor** | A Risky or ADR-level choice, or a builder stuck twice. Brief it without your preferred answer. | Heavy, second opinion when one is active | The pick, why, and the risk that would change it. |
 | **Reviewer** | A PR worth a second look (always for L or Risky). Diff only (`code-review`); app checks belong to QA. | See section 2 | Findings by severity, then approve / changes-needed. |
 | **Diagnoser** | Bug with unknown cause (`diagnosing-bugs`). | Heavy | Root cause, a failing test, suggested fix. |
 

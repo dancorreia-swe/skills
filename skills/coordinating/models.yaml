@@ -7,6 +7,11 @@
 # Keep it plain block YAML: the guards read `model:` lines with grep, not a YAML parser.
 # Ids: T3 `orchestrator_capabilities`, or `orca orchestration worker-start --help`.
 #
+# A family is used only if it is listed here AND its provider is active on the host. To work
+# with one family only, delete the other family's blocks from every tier in your copy: the
+# guards then deny its models, and the second opinion becomes a fresh same-family Heavy
+# helper (SKILL.md section 2).
+#
 # Don't edit this copy: `npx skills update` overwrites it. Copy it to
 # ~/.config/coordinating/models.yaml and edit that; agents and guards read it first.
 
@@ -39,7 +44,8 @@ tiers:
       effort: high
 
 # A second opinion is the other family from the one coordinating, at Mid
-# (Heavy when Risky). Codex is also a good builder for backend or algorithmic S/M work.
+# (Heavy when Risky), when that family is listed and active; otherwise a fresh
+# same-family Heavy helper. Codex is also a good builder for backend or algorithmic S/M work.
 second_opinion: other_family
 
 # Ids the guards accept outside the tiers. Add entries as `- model: <id>`.
