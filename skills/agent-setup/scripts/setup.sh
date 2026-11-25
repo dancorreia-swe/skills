@@ -70,12 +70,19 @@ say() { printf '  %-7s %s\n' "$1" "$2"; }
 backup() { # file
   [ -f "$1" ] || return 0
   mkdir -p "$BACKUP_DIR"
-  cp -p "$1" "$BACKUP_DIR/$(printf '%s' "$1" | sed "s|^$HOME/||; s|^\.||; s|/|__|g")"
+  local home_p; home_p=$(cd "$HOME" && pwd -P)
+  cp -p "$1" "$BACKUP_DIR/$(printf '%s' "$1" | sed "s|^$HOME/||; s|^$home_p/||; s|^\.||; s|/|__|g")"
 }
-write() { # file content: back up, then replace
-  backup "$1"
-  mkdir -p "$(dirname "$1")"
-  printf '%s\n' "$2" > "$1.tmp.$$" && mv "$1.tmp.$$" "$1"
+write() { # file content: back up, then replace (through a symlink, so dotfile links survive)
+  local f=$1 l
+  while [ -L "$f" ]; do
+    l=$(readlink "$f")
+    case $l in /*) f=$l ;; *) f=$(dirname "$f")/$l ;; esac
+  done
+  [ -d "$(dirname "$f")" ] && f=$(cd "$(dirname "$f")" && pwd -P)/$(basename "$f")
+  backup "$f"
+  mkdir -p "$(dirname "$f")"
+  printf '%s\n' "$2" > "$f.tmp.$$" && mv "$f.tmp.$$" "$f"
   CHANGED=1
 }
 
