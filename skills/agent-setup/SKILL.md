@@ -1,6 +1,6 @@
 ---
 name: agent-setup
-description: Sets up this skill set on the machine for Claude Code and Codex: the model tiers (models.yaml) and autonomy policy (autonomy.yaml), the model-guard and rotation hooks, and the global-instruction block in CLAUDE.md / AGENTS.md. Use when the user asks to set up, install, check, update or remove these hooks, instructions or config, or to change the model tiers or autonomy policy.
+description: Sets up this skill set on the machine for Claude Code and Codex, covering the model tiers (models.yaml), the autonomy policy (autonomy.yaml), the model-guard and rotation hooks, and the global-instruction block in CLAUDE.md / AGENTS.md. Use when the user asks to set up, install, check, update or remove these hooks, instructions or config, or to change the model tiers or autonomy policy.
 ---
 
 # Agent setup

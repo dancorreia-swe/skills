@@ -1,6 +1,6 @@
 ---
 name: takeover
-description: Continues existing work as its new owner: a PR, a branch, an agent thread, or an autopilot run. Use when the user or a predecessor says "take over", or when a prompt points you at a run card or handoff file.
+description: Continues existing work (a PR, a branch, an agent thread, or an autopilot run) as its new owner. Use when the user or a predecessor says "take over", or when a prompt points you at a run card or handoff file.
 ---
 
 # Takeover
