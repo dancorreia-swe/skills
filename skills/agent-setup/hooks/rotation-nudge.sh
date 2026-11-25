@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# PostToolUse(*): nudges the main agent to write its handoff and rotate (coordinating skill, section 6).
+# PostToolUse(*): nudges the main agent to hand off or compact (autopilot section 5, full-send "Context").
 # Fires once when context reaches ROTATE_TOKENS (default 250000; 190000 for Codex, whose window is ~258k),
-# then every further 20k, and once at ROTATE_ROUNDS orchestration rounds (default 25: delegate_task calls,
-# `orca orchestration check`, and `t3 thread start|send` run from a shell), then every further 10.
+# then every further 20k, and once at ROTATE_ROUNDS orchestration rounds (default 25: delegate_task,
+# t3_thread_launch and t3_thread_send calls, and the t3 CLI's thread start|send run from a shell),
+# then every further 10.
+# Calls within ROUND_WINDOW seconds (default 120) of the last counted one are the same round: a panel
+# or a fan-out sent in one message counts once.
 # Main agent only. ROTATION_NUDGE=0 disables.
 set -u
 input=$(cat)
@@ -10,17 +13,19 @@ input=$(cat)
 [ -n "$(printf '%s' "$input" | jq -r '.agent_id // empty' 2>/dev/null)" ] && exit 0
 sid=$(printf '%s' "$input" | jq -r '.session_id // "unknown"' 2>/dev/null)
 f="${TMPDIR:-/tmp}/rotation-nudge-${sid}"
-{ read -r rounds tok_band round_band < "$f"; } 2>/dev/null || { rounds=0; tok_band=0; round_band=0; }
+{ read -r rounds tok_band round_band last_round < "$f"; } 2>/dev/null || { rounds=0; tok_band=0; round_band=0; }
+last_round=${last_round:-0}; now=$(date +%s)
 
 tool=$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)
 cmd=$(printf '%s' "$input" | jq -r '.tool_input | if type == "object" then (.command // .cmd // .input // "") else (. // "") end | if type == "array" then join(" ") else tostring end' 2>/dev/null)
 # A shell command counts when it runs one of these (not when text only mentions it).
 runs_round() {
   printf '%s\n' "$cmd" | tr ';&|()`' '\n' | grep -Eq \
-    "^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*((env|command|exec|nohup)[[:space:]]+)*([^[:space:]]*/)?(orca[[:space:]]+orchestration[[:space:]]+check|t3[[:space:]]+thread[[:space:]]+(start|send))([[:space:]]|$)"
+    "^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*((env|command|exec|nohup)[[:space:]]+)*([^[:space:]]*/)?t3[[:space:]]+thread[[:space:]]+(start|send)([[:space:]]|$)"
 }
-if [[ $tool =~ ^mcp__t3[-_]code__delegate_task$ ]] || { [ "$tool" = "Bash" ] && runs_round; }; then
-  rounds=$((rounds + 1))
+if [[ $tool =~ ^mcp__t3[-_]code__(delegate_task|t3_thread_launch|t3_thread_send)$ ]] || { [ "$tool" = "Bash" ] && runs_round; }; then
+  if [ $((now - last_round)) -ge "${ROUND_WINDOW:-120}" ]; then rounds=$((rounds + 1)); fi
+  last_round=$now
 fi
 
 tokens=0; default_t=250000
@@ -46,8 +51,8 @@ if [ "$rounds" -ge "$limit_r" ]; then
   band=$(( (rounds - limit_r) / 10 + 1 ))
   [ "$band" -gt "$round_band" ] && { round_band=$band; msg="${msg:+$msg and }this session has run $rounds orchestration rounds"; }
 fi
-echo "$rounds $tok_band $round_band" > "$f"
+echo "$rounds $tok_band $round_band $last_round" > "$f"
 [ -z "$msg" ] && exit 0
-jq -n --arg c "Rotation nudge: $msg. Hand off or compact? Decide now by the coordinating skill's section 6 table: a coordinator, a phase end, a second compaction, a context full of wrong turns, or a different model next means hand off; one agent a few steps from done, on its first compaction, may keep going (write what a summary must not lose to a notes file first). To hand off: finish the current step, write the handoff file (path and sections: section 6), launch the successor yourself with the section 6 pointer (host map, New owner), reply with its link, and stop." \
+jq -n --arg c "Rotation nudge: $msg. Hand off or compact? Decide now. A coordinator (autopilot) hands off: autopilot section 5. Anyone else (a builder: one thread, one PR) keeps going and lets it compact, writing what a summary must not lose to a notes file first, and hands off on a second compaction, a context full of wrong turns, or a different model next (full-send, \"Context\"). To hand off: finish the current step, write the run card's START HERE or a handoff file (takeover, \"Writing a handoff file\"), launch the successor yourself with \"Use takeover\" and the file path, reply with its link, and stop. A builder under a coordinator reports handoff to it instead of launching." \
   '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$c}}'
 exit 0

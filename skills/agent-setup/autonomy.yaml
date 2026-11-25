@@ -1,0 +1,29 @@
+# How far agents go without the user (full-send "Deciding", autopilot).
+#
+# Don't edit this copy: `npx skills update` overwrites it. Copy it to
+# ~/.config/agent-setup/autonomy.yaml and edit that; agents read it first.
+
+# Who merges an autopilot run's PRs:
+#   ask   builders run full-stop; ready PRs wait for you in the digest
+#   auto  builders run full-send and merge on its merge gate
+# Saying "full send" for a run, or for one task, grants merging for that run or task.
+merge: ask
+
+# The only things that wait for the user. Everything else is decided, logged under
+# "Decided for you" or in the decisions file, and reported. A gate parks its own item;
+# the rest moves on.
+gates:
+  - production deploys or releases, and writes to production data
+  - money: purchases, paid plans, billing changes
+  - secrets or logins only the user holds
+  - destructive operations: deleting data, force-pushing shared branches, rewriting history
+  - outward-facing actions: publishing, messaging people, breaking a public API
+  - vendor, legal or hosting choices
+  - tickets labelled ready-for-human
+
+# Builder threads running at once, each in its own worktree. Read-only helpers (planners,
+# councils, reviewers, QA) don't count against it.
+max_builders: 5
+
+# Autopilot's fallback wake when nothing else arrives (minutes; 0 turns it off).
+heartbeat_minutes: 60

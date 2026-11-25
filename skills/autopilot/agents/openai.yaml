@@ -1,0 +1,4 @@
+interface:
+  display_name: "Autopilot"
+  short_description: "Run a backlog to done with one builder thread per ticket"
+  default_prompt: "Use $autopilot to run the ready tickets in this repo to done. I am not watching."

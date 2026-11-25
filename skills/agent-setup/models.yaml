@@ -1,0 +1,67 @@
+# Model tiers, for Claude and Codex alike. Every helper, delegate or thread launch names a
+# model and an effort from here (a T3 thread: `modelSelection`): an unnamed child inherits its parent's model, so a
+# Heavy coordinator would quietly spawn Heavy children.
+#
+# - Smaller is the default. Step up a tier on evidence: the same check failing twice, or the
+#   task proving bigger than briefed. Heavy is the ceiling.
+# - Your family first: a helper runs on your own family's model for its tier. Your native
+#   subagent tool reaches only your family; the other family goes through `delegate_task`.
+# - Second family = the other family from yours (Claude -> Codex, Codex -> Claude):
+#   review-loop's reviewer. Codex is also a good builder for backend or algorithmic S/M work.
+# - Unavailable family (`model_unavailable`, a usage limit, a disabled provider): skip it for
+#   the session; launch the same tier in your own family, in a fresh context, and label the
+#   result "same-family".
+#
+# The guard hooks (optional, MANUAL.md) deny a launch whose model id is not listed under any
+# `model:` key here, or that names no effort. Keep it plain block YAML: they read it with grep.
+# Ids: T3 `orchestrator_capabilities`.
+#
+# Don't edit this copy: `npx skills update` overwrites it. Copy it to
+# ~/.config/agent-setup/models.yaml and edit that; agents and guards read it first.
+
+tiers:
+  light:
+    use_for: XS work, summarising logs or CI, mechanical sweeps, QA re-checks
+    claude:
+      model: claude-haiku-5-5
+      effort: high
+    codex:
+      model: gpt-6-luna
+      effort: high
+
+  mid: # the default
+    use_for: S/M building, QA, tests, design-system work, routine review
+    claude:
+      model: claude-sonnet-5-5
+      effort: medium
+    codex:
+      model: gpt-6.1-sol
+      effort: medium
+
+  heavy: # the ceiling
+    use_for: coordinating, judging a council (so a builder whose review is one), planning, strategy, advice, diagnosis, review of Risky changes
+    claude:
+      model: claude-opus-5-5
+      effort: high
+    codex:
+      model: gpt-6.1-sol
+      effort: high
+
+# The council skill's members: one strong model per provider, briefed together and judged
+# by a Heavy parent. With 3 or more available, the council is full-send's review for M
+# changes and up. Add one per extra provider you enable (Gemini, Grok…).
+panel:
+  - family: claude
+    model: claude-opus-5-5
+    effort: high
+  - family: codex
+    model: gpt-6.1-sol
+    effort: high
+  # Gemini: uncomment once the provider is enabled, with the exact id and effort option
+  # from `orchestrator_capabilities` (a commented line is invisible to the guards).
+  # - family: gemini
+  #   model: <gemini id>
+  #   effort: high
+
+# Ids the guards accept outside the tiers. Add entries as `- model: <id>`.
+extra_allowed: []

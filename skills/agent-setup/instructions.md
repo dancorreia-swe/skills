@@ -1,0 +1,4 @@
+## Agents
+- A change to a repo that I ask for with no other instruction runs as `full-stop`: through to a ready PR, with no stops for me between steps. "Full send" adds merging; "autopilot" runs a backlog, and the builder threads it launches are my request.
+- Every helper, delegate or thread you launch names a model and an effort (a thread: a preset `modelSelection`) from `{{SKILL_DIR}}/models.yaml` (`~/.config/agent-setup/models.yaml` replaces it); its header has the rules.
+- At ~{{ROTATE_TOKENS}} tokens of context, an auto-compact warning, or 25 orchestration rounds: a coordinator hands off (`autopilot` §5); anyone else compacts once and hands off after that (`full-send`, "Context"; a builder under a coordinator reports `handoff` to it instead of launching). Launching the successor thread yourself with "Use `takeover`…" is my standing request; ask me only if the launch fails.
